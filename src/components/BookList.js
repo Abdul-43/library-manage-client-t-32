@@ -8,9 +8,12 @@ const BookList = ({ books, onDelete, onEdit }) => {
         <ListGroupItem key={book.id}>
           <div>Title: {book.title}</div>
           <div>Author: {book.author}</div>
-          {/* Display more book details as needed */}
-          <Button variant="danger" className="me-2" onClick={() => onDelete(book.id)}>Delete</Button>
-          <Button variant="secondary" onClick={() => onEdit(book)}>Edit</Button>
+          <Button variant="danger" className="me-2" onClick={() => onDelete(book.id)}>
+            Delete
+          </Button>
+          <Button variant="secondary" onClick={() => onEdit(book)}>
+            Edit
+          </Button>
         </ListGroupItem>
       ))}
     </ListGroup>
