@@ -1,64 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {  Routes, Route, Link } from 'react-router-dom';
 import BookForm from './components/BookForm';
 import BookList from './components/BookList';
 import './App.css';
+import { fetchBooks, createBook, updateBook, deleteBook } from './Api.js';
+import { useNavigate } from 'react-router-dom';
 
 const App = () => {
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
+  const navigate=useNavigate();
+  useEffect(() => {
+    fetchBooksData();
+  }, []);
 
-  const handleCreateBook = (values) => {
+  const fetchBooksData = async () => {
+    const data = await fetchBooks();
+    setBooks(data);
+  };
+
+  const handleCreateBook = async (values) => {
     const newBook = { ...values, id: Date.now() };
-    setBooks([...books, newBook]);
+    const createdBook = await createBook(newBook);
+    if (createdBook) {
+      setBooks([...books, createdBook]);
+      alert("Book created")
+    }
   };
 
-  const handleUpdateBook = (values) => {
-    const updatedBooks = books.map((book) =>
-      book.id === selectedBook.id ? { ...book, ...values } : book
-    );
-    setBooks(updatedBooks);
+  const handleUpdateBook = async (values) => {
+    const updatedBook = { ...values, id: selectedBook.id };
+    const updatedBookData = await updateBook(updatedBook);
+    if (updatedBookData) {
+      const updatedBooks = books.map((book) =>
+        book.id === updatedBookData.id ? updatedBookData : book
+      );
+      setBooks(updatedBooks);
+    }
     setSelectedBook(null);
+    navigate("/")
   };
 
-  const handleDeleteBook = (bookId) => {
+  const handleDeleteBook = async (bookId) => {
+    await deleteBook(bookId);
     const updatedBooks = books.filter((book) => book.id !== bookId);
     setBooks(updatedBooks);
+    fetchBooksData();
   };
 
   const handleEditBook = (book) => {
+    console.log(book)
     setSelectedBook(book);
+    navigate(`/edit-book/${book.id}`)
   };
 
   return (
-    <div className='app '>
-      <div className="container">
+      <div className="container ">
         <h1 className="my-4 text-center">Library Management</h1>
-
-        {/* Book form */}
-        <div className="card mb-4">
-          <div className="card-body">
-            <h2 className="card-title text-center">{selectedBook ? 'Edit Book' : 'Add Book'}</h2>
-            <BookForm
-              initialValues={selectedBook || { title: '', author: '' }}
-              onSubmit={selectedBook ? handleUpdateBook : handleCreateBook}
-            />
-          </div>
-        </div>
-
-        {/* Book list */}
-        <div className="card">
-          <div className="card-body">
-            <h2 className="card-title text-center">Books</h2>
-            <BookList
+        <nav className="mb-4">
+          <ul className="nav nav-pills">
+            <li className="nav-item ">
+              <Link to="/" className="nav-link "
+                aria-current="page">
+                Book List
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/add-book" className="nav-link">
+                Add Book
+              </Link>
+            </li>
+          </ul>
+        </nav>
+        <Routes>
+          <Route exact path="/"
+            element={<BookList
               books={books}
               onDelete={handleDeleteBook}
               onEdit={handleEditBook}
             />
-          </div>
-        </div>
+            }
+          />
+          <Route path="/add-book"
+            element={<BookForm
+              initialValues={{ title: '', author: '' }}
+              onSubmit={handleCreateBook}
+            />}
+          />
+          <Route path="/edit-book/:id"
+            element={<BookForm
+              initialValues={selectedBook || { title: '', author: '' }}
+              onSubmit={handleUpdateBook}
+            />}
+          />
+        </Routes>
       </div>
-    </div>
+
   );
 };
 
 export default App;
+
